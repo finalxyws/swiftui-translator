@@ -7,24 +7,22 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header section with title
-            VStack(spacing: 20) {
+            VStack(spacing: 32) {
                 Text("SwiftUI Translator")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .fontDesign(.rounded)
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
-                    .padding(.top, 24)
+                    .padding(.top, 40)
                 
                 // Language selectors with modern card design
-                HStack(spacing: 24) {
-                    VStack(spacing: 8) {
+                HStack(spacing: 32) {
+                    VStack(spacing: 12) {
                         Picker("Source Language", selection: $translatorVM.sourceLanguage) {
                             ForEach(Language.allCases, id: \.self) { language in
                                 Text(language.displayName).tag(language)
                             }
                         }
                         .pickerStyle(MenuPickerStyle())
-                        .frame(minWidth: 160, idealWidth: 200, maxWidth: 250)
+                        .frame(minWidth: 180, idealWidth: 220, maxWidth: 280)
                         .controlSize(.large)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                     }
@@ -42,31 +40,30 @@ struct ContentView: View {
                     }
                     .buttonStyle(.borderless)
                     
-                    VStack(spacing: 8) {
+                    VStack(spacing: 12) {
                         Picker("Target Language", selection: $translatorVM.targetLanguage) {
                             ForEach(Language.allCases, id: \.self) { language in
                                 Text(language.displayName).tag(language)
                             }
                         }
                         .pickerStyle(MenuPickerStyle())
-                        .frame(minWidth: 160, idealWidth: 200, maxWidth: 250)
+                        .frame(minWidth: 180, idealWidth: 220, maxWidth: 280)
                         .controlSize(.large)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                     }
                 }
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 24)
+            .padding(.horizontal, 40)
+            .padding(.bottom, 40)
             
             // Main content area
-            VStack(spacing: 20) {
+            VStack(spacing: 32) {
                 // Input and output areas with modern design
-                HStack(spacing: 20) {
-                    VStack(spacing: 8) {
+                HStack(spacing: 32) {
+                    VStack(spacing: 16) {
                         HStack {
                             Text("Input Text")
-                                .font(.headline)
-                                .fontDesign(.rounded)
+                                .font(.system(size: 18, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.secondary)
                             Spacer()
                             HStack(spacing: 2) {
@@ -81,8 +78,8 @@ struct ContentView: View {
                                     .font(.callout)
                                     .foregroundStyle(translatorVM.inputText.count > TranslatorViewModel.warningThreshold ? .orange : translatorVM.inputText.count >= TranslatorViewModel.maxInputLength ? .red : .secondary)
                             }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
                             .background(
                                 (translatorVM.inputText.count > TranslatorViewModel.warningThreshold ?
                                     Color.orange.opacity(0.08) :
@@ -113,23 +110,22 @@ struct ContentView: View {
                             }
                         ))
                             .font(.system(size: 16, weight: .regular, design: .default))
-                            .lineSpacing(6)
-                            .padding(16)
+                            .lineSpacing(8)
+                            .padding(20)
                             .scrollContentBackground(.hidden)
                             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16)
                                     .stroke(.secondary.opacity(0.3), lineWidth: 1)
                             )
-                            .frame(height: 200)
+                            .frame(minHeight: 240, maxHeight: 320)
                             .contentTransition(.numericText())
                     }
                     
-                    VStack(spacing: 8) {
+                    VStack(spacing: 16) {
                         HStack {
                             Text("Translation Result")
-                                .font(.headline)
-                                .fontDesign(.rounded)
+                                .font(.system(size: 18, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.secondary)
                             
                             Spacer()
@@ -139,7 +135,7 @@ struct ContentView: View {
                                     translatorVM.copyToClipboard()
                                 }
                             }) {
-                                HStack(spacing: 6) {
+                                HStack(spacing: 8) {
                                     Image(systemName: translatorVM.isCopied ? "checkmark" : "doc.on.doc")
                                         .font(.system(size: 14, weight: .medium))
                                         .symbolEffect(.bounce, value: translatorVM.translatedText)
@@ -170,9 +166,9 @@ struct ContentView: View {
                         ScrollView {
                             Text(translatorVM.translatedText.isEmpty ? "Translation will appear here..." : translatorVM.translatedText)
                                 .font(.system(size: 16, weight: .regular, design: .default))
-                                .lineSpacing(6)
+                                .lineSpacing(8)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(16)
+                                .padding(20)
                                 .textSelection(.enabled)
                                 .foregroundStyle(translatorVM.translatedText.isEmpty ? .secondary : .primary)
                                 .contentTransition(.opacity)
@@ -182,18 +178,18 @@ struct ContentView: View {
                             RoundedRectangle(cornerRadius: 16)
                                 .stroke(.secondary.opacity(0.3), lineWidth: 1)
                         )
-                        .frame(height: 200)
+                        .frame(minHeight: 240, maxHeight: 320)
                     }
                 }
                 
                 // Action buttons with enhanced styling
-                HStack(spacing: 16) {
+                HStack(spacing: 20) {
                     Button(action: {
                         withAnimation(.snappy) {
                             translatorVM.translate()
                         }
                     }) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 10) {
                             Image(systemName: translatorVM.isTranslating ? "arrow.clockwise" : "arrow.right")
                                 .font(.system(size: 16, weight: .medium))
                                 .symbolEffect(.bounce, value: translatorVM.isTranslating)
@@ -209,8 +205,8 @@ struct ContentView: View {
                                 .font(.system(size: 16, weight: .medium))
                         }
                         .foregroundStyle(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 14)
                         .background(
                             translatorVM.isTranslating ? 
                                 LinearGradient(colors: [.blue.opacity(0.8), .blue], startPoint: .topLeading, endPoint: .bottomTrailing) :
@@ -234,7 +230,7 @@ struct ContentView: View {
                             translatorVM.clearText()
                         }
                     }) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 10) {
                             Image(systemName: "trash")
                                 .font(.system(size: 16, weight: .medium))
                                 .symbolEffect(.bounce, value: translatorVM.inputText.isEmpty && translatorVM.translatedText.isEmpty)
@@ -243,12 +239,12 @@ struct ContentView: View {
                                 .font(.system(size: 16, weight: .medium))
                         }
                         .foregroundStyle(Color.accentColor)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 14)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(.quaternary, lineWidth: 1)
+                                .stroke(.secondary.opacity(0.3), lineWidth: 1)
                         )
                         .scaleEffect(translatorVM.inputText.isEmpty && translatorVM.translatedText.isEmpty ? 0.95 : 1.0)
                         .opacity(translatorVM.inputText.isEmpty && translatorVM.translatedText.isEmpty ? 0.5 : 1.0)
@@ -274,8 +270,8 @@ struct ContentView: View {
                             .foregroundStyle(.red)
                             .font(.caption)
                             .fontDesign(.rounded)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
                             .background(.red.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
@@ -287,10 +283,10 @@ struct ContentView: View {
                     }
                 }
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 8)
+            .padding(.horizontal, 40)
+            .padding(.bottom, 20)
             
-            Spacer(minLength: 24)
+            Spacer(minLength: 32)
         }
         .frame(minWidth: AppConfig.shared.minWindowWidth, minHeight: AppConfig.shared.minWindowHeight)
         .background(.regularMaterial)

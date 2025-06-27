@@ -1,102 +1,97 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @State private var selectedTab: Tab? = .api
     @StateObject private var settingsModel = SettingsModel()
-    @Environment(\.dismiss) private var dismiss
-    @State private var selectedTab: SettingsTab = .api
-    
-    enum SettingsTab: String, CaseIterable {
+
+    enum Tab: String, CaseIterable, Identifiable {
         case api = "API Settings"
         case about = "About"
-        
-        var iconName: String {
+        var id: String { rawValue }
+        var icon: String {
             switch self {
-            case .api:
-                return "gear"
-            case .about:
-                return "info.circle"
+            case .api: return "gear.circle.fill"
+            case .about: return "info.circle.fill"
             }
         }
     }
-    
+
     var body: some View {
-        HSplitView {
-            // Left sidebar navigation
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Settings")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .fontDesign(.rounded)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    .padding(.bottom, 16)
-                
-                VStack(spacing: 4) {
-                    ForEach(SettingsTab.allCases, id: \.rawValue) { tab in
-                        Button(action: {
-                            selectedTab = tab
-                        }) {
-                            HStack(spacing: 12) {
-                                Image(systemName: tab.iconName)
-                                    .frame(width: 16, height: 16)
-                                    .foregroundStyle(selectedTab == tab ? Color.accentColor : .secondary)
-                                
-                                Text(tab.rawValue)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(selectedTab == tab ? .primary : .secondary)
-                                
-                                Spacer()
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                            .background(
-                                selectedTab == tab ? Color.accentColor.opacity(0.12) : Color.clear
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+        NavigationSplitView {
+            List(selection: $selectedTab) {
+                ForEach(Tab.allCases) { tab in
+                    NavigationLink(value: tab) {
+                        HStack(spacing: 12) {
+                            Image(systemName: tab.icon)
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 20)
+                            
+                            Text(tab.rawValue)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(.primary)
                         }
-                        .buttonStyle(.plain)
-                        .focusable(false)
-                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 16)
                     }
+                    .listRowInsets(EdgeInsets())
+                    .listRowSeparator(.hidden)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
                 }
-                
-                Spacer()
             }
-            .frame(minWidth: 200, maxWidth: 250)
+            .listStyle(.sidebar)
+            .frame(minWidth: 180, idealWidth: 200, maxWidth: 220)
             .background(.regularMaterial)
-            
-            // Right content area
+        } detail: {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    switch selectedTab {
-                    case .api:
-                        APISettingsView(settingsModel: settingsModel)
-                    case .about:
-                        AboutView()
+                VStack(alignment: .leading, spacing: 0) {
+                    // Header with title
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(selectedTab?.rawValue ?? "API Settings")
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundStyle(.primary)
+                        
+                        Text(getTabDescription(for: selectedTab))
+                            .font(.system(size: 16, weight: .regular))
+                            .foregroundStyle(.secondary)
                     }
+                    .padding(.top, 32)
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 24)
+                    
+                    // Content
+                    VStack(alignment: .leading, spacing: 0) {
+                        switch selectedTab {
+                        case .api, .none:
+                            APISettingsView(settingsModel: settingsModel)
+                        case .about:
+                            AboutView()
+                        }
+                    }
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 32)
                 }
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-            .frame(minWidth: 400)
+            .background(.regularMaterial)
         }
-        .frame(width: 750, height: 550)
-        .background(.regularMaterial)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
-                }
-            }
-            
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
-                    settingsModel.saveSettings()
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(!settingsModel.validateSettings())
-            }
+        .frame(width: 800, height: 600)
+        .onChange(of: settingsModel.selectedProvider) { _, _ in settingsModel.saveSettings() }
+        .onChange(of: settingsModel.apiKey) { _, _ in settingsModel.saveSettings() }
+        .onChange(of: settingsModel.customEndpoint) { _, _ in settingsModel.saveSettings() }
+        .onChange(of: settingsModel.model) { _, _ in settingsModel.saveSettings() }
+        .onChange(of: settingsModel.customPrompt) { _, _ in settingsModel.saveSettings() }
+    }
+    
+    private func getTabDescription(for tab: Tab?) -> String {
+        switch tab {
+        case .api:
+            return "Configure your translation API settings and preferences"
+        case .about:
+            return "Learn more about SwiftUI Translator"
+        case .none:
+            return "Configure your translation API settings and preferences"
         }
     }
 }
@@ -105,18 +100,9 @@ struct APISettingsView: View {
     @ObservedObject var settingsModel: SettingsModel
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 28) {
-            Text("API Configuration")
-                .font(.title)
-                .fontWeight(.bold)
-                .fontDesign(.rounded)
-            
+        VStack(alignment: .leading, spacing: 40) {
             // Provider Selection
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Translation Provider")
-                    .font(.headline)
-                    .fontDesign(.rounded)
-                
+            SettingsSection(title: "Translation Provider", description: "Choose your preferred translation service") {
                 Picker("Provider", selection: $settingsModel.selectedProvider) {
                     ForEach(SettingsModel.TranslationProvider.allCases, id: \.rawValue) { provider in
                         Text(provider.displayName).tag(provider)
@@ -131,185 +117,173 @@ struct APISettingsView: View {
             }
             
             // API Key
-            VStack(alignment: .leading, spacing: 12) {
-                Text("API Key")
-                    .font(.headline)
-                    .fontDesign(.rounded)
-                
+            SettingsSection(title: "API Key", description: "Your API key will be stored securely in the system keychain") {
                 SecureField("Enter your API key", text: $settingsModel.apiKey)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(.body, design: .monospaced))
-                
-                Text("Your API key will be stored securely in the system keychain.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
             
             // Endpoint
-            VStack(alignment: .leading, spacing: 12) {
+            SettingsSection(title: "API Endpoint", description: "The endpoint URL for your translation service") {
                 HStack {
-                    Text("API Endpoint")
-                        .font(.headline)
-                        .fontDesign(.rounded)
+                    TextField("API Endpoint URL", text: $settingsModel.customEndpoint)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(.body, design: .monospaced))
                     
-                    Spacer()
-                    
-                    Button("Reset to Default") {
+                    Button("Reset") {
                         settingsModel.customEndpoint = settingsModel.selectedProvider.defaultEndpoint
                     }
-                    .font(.caption)
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                 }
-                
-                TextField("API Endpoint URL", text: $settingsModel.customEndpoint)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.system(.body, design: .monospaced))
             }
             
             // Model
-            VStack(alignment: .leading, spacing: 12) {
+            SettingsSection(title: "Model", description: "The AI model to use for translations") {
                 HStack {
-                    Text("Model")
-                        .font(.headline)
-                        .fontDesign(.rounded)
+                    TextField("Model name", text: $settingsModel.model)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(.body, design: .monospaced))
                     
-                    Spacer()
-                    
-                    Button("Reset to Default") {
+                    Button("Reset") {
                         settingsModel.model = settingsModel.selectedProvider.defaultModel
                     }
-                    .font(.caption)
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                 }
-                
-                TextField("Model name", text: $settingsModel.model)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.system(.body, design: .monospaced))
             }
             
             // Custom Prompt
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Translation Prompt")
-                        .font(.headline)
-                        .fontDesign(.rounded)
+            SettingsSection(title: "Translation Prompt", description: "Customize the prompt used for translation. Use {source_language}, {target_language}, and {text} as placeholders") {
+                VStack(alignment: .leading, spacing: 12) {
+                    TextEditor(text: $settingsModel.customPrompt)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(height: 120)
+                        .padding(12)
+                        .background(.background)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(.secondary.opacity(0.3), lineWidth: 1)
+                        )
                     
-                    Spacer()
-                    
-                    Button("Reset to Default") {
-                        settingsModel.customPrompt = settingsModel.selectedProvider.defaultPrompt
+                    HStack {
+                        Spacer()
+                        Button("Reset to Default") {
+                            settingsModel.customPrompt = settingsModel.selectedProvider.defaultPrompt
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
                     }
-                    .font(.caption)
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
                 }
+            }
+        }
+    }
+}
+
+struct SettingsSection<Content: View>: View {
+    let title: String
+    let description: String
+    let content: Content
+    
+    init(title: String, description: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.description = description
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
                 
-                TextEditor(text: $settingsModel.customPrompt)
-                    .font(.system(.body, design: .monospaced))
-                    .frame(height: 120)
-                    .padding(12)
-                    .background(.background)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(.quaternary, lineWidth: 1)
-                    )
-                
-                Text("Use {source_language}, {target_language}, and {text} as placeholders.")
-                    .font(.caption)
+                Text(description)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundStyle(.secondary)
+            }
+            
+            content
+        }
+        .padding(.vertical, 20)
+        .padding(.horizontal, 24)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.background)
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        )
+    }
+}
+
+struct AboutView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 40) {
+            // App Info
+            SettingsSection(title: "App Information", description: "SwiftUI Translator - AI-powered translation tool") {
+                HStack(spacing: 20) {
+                    Image(systemName: "translate")
+                        .font(.system(size: 48))
+                        .foregroundStyle(Color.accentColor)
+                        .symbolEffect(.bounce, value: true)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("SwiftUI Translator")
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                        
+                        Text("Version \(AppConfig.shared.version)")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            
+            // Developer Info
+            SettingsSection(title: "Developer Information", description: "Built with modern technologies") {
+                VStack(alignment: .leading, spacing: 12) {
+                    InfoRow(label: "Author", value: AppConfig.shared.author)
+                    InfoRow(label: "Built with", value: "SwiftUI • Swift 6.0 • macOS 15")
+                    InfoRow(label: "Target Platform", value: "macOS 15.0+")
+                }
+            }
+            
+            // Features
+            SettingsSection(title: "Features", description: "Key capabilities of SwiftUI Translator") {
+                VStack(alignment: .leading, spacing: 12) {
+                    FeatureRow(icon: "globe", text: "Multi-language translation support")
+                    FeatureRow(icon: "cpu", text: "AI-powered translation with DeepSeek & OpenAI")
+                    FeatureRow(icon: "paintbrush", text: "Modern macOS 15 native design")
+                    FeatureRow(icon: "keyboard", text: "Keyboard shortcuts and menu integration")
+                    FeatureRow(icon: "doc.on.clipboard", text: "Easy copy and paste functionality")
+                    FeatureRow(icon: "gearshape", text: "Customizable API settings")
+                }
+            }
+            
+            // License
+            SettingsSection(title: "License", description: "This software is distributed under the MIT License") {
+                Text("MIT License - Open source software for everyone")
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(.secondary)
             }
         }
     }
 }
 
-struct AboutView: View {
+struct InfoRow: View {
+    let label: String
+    let value: String
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 28) {
-            Text("About SwiftUI Translator")
-                .font(.title)
-                .fontWeight(.bold)
-                .fontDesign(.rounded)
+        HStack {
+            Text(label)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.primary)
             
-            VStack(alignment: .leading, spacing: 20) {
-                HStack(spacing: 16) {
-                    Image(systemName: "translate")
-                        .font(.system(size: 48))
-                        .foregroundStyle(Color.accentColor)
-                        .symbolEffect(.bounce, value: true)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("SwiftUI Translator")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .fontDesign(.rounded)
-                        
-                        Text("Version \(AppConfig.shared.version)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                
-                Divider()
-                
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Developer Information")
-                        .font(.headline)
-                        .fontDesign(.rounded)
-                    
-                    HStack {
-                        Text("Author:")
-                            .fontWeight(.medium)
-                        Text(AppConfig.shared.author)
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Built with:")
-                            .fontWeight(.medium)
-                        Text("SwiftUI • Swift 6.0 • macOS 15")
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Target Platform:")
-                            .fontWeight(.medium)
-                        Text("macOS 15.0+")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                
-                Divider()
-                
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Features")
-                        .font(.headline)
-                        .fontDesign(.rounded)
-                    
-                    VStack(alignment: .leading, spacing: 12) {
-                        FeatureRow(icon: "globe", text: "Multi-language translation support")
-                        FeatureRow(icon: "cpu", text: "AI-powered translation with DeepSeek & OpenAI")
-                        FeatureRow(icon: "paintbrush", text: "Modern macOS 15 native design")
-                        FeatureRow(icon: "keyboard", text: "Keyboard shortcuts and menu integration")
-                        FeatureRow(icon: "doc.on.clipboard", text: "Easy copy and paste functionality")
-                        FeatureRow(icon: "gearshape", text: "Customizable API settings")
-                    }
-                }
-                
-                Divider()
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("License")
-                        .font(.headline)
-                        .fontDesign(.rounded)
-                    
-                    Text("This software is distributed under the MIT License.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            Spacer()
+            
+            Text(value)
+                .font(.system(size: 14, weight: .regular))
+                .foregroundStyle(.secondary)
         }
     }
 }
@@ -319,14 +293,15 @@ struct FeatureRow: View {
     let text: String
     
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 12) {
             Image(systemName: icon)
+                .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(Color.accentColor)
-                .frame(width: 16)
+                .frame(width: 20)
             
             Text(text)
-                .font(.body)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 14, weight: .regular))
+                .foregroundStyle(.primary)
         }
     }
 }
