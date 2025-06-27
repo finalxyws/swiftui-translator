@@ -12,6 +12,7 @@ class TranslatorViewModel: ObservableObject {
     @Published var targetLanguage: Language = .chinese
     @Published var isTranslating: Bool = false
     @Published var errorMessage: String?
+    @Published var isCopied: Bool = false
     
     private var settingsModel: SettingsModel?
     private var cancellables = Set<AnyCancellable>()
@@ -103,6 +104,15 @@ class TranslatorViewModel: ObservableObject {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(translatedText, forType: .string)
+        
+        // Show copy success feedback
+        isCopied = true
+        
+        // Reset the copied state after 2 seconds
+        Task {
+            try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+            isCopied = false
+        }
         #endif
     }
 }

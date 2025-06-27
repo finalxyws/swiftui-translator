@@ -105,12 +105,31 @@ struct ContentView: View {
                                     translatorVM.copyToClipboard()
                                 }
                             }) {
-                                Image(systemName: "doc.on.doc")
-                                    .symbolEffect(.bounce, value: translatorVM.translatedText)
-                                    .foregroundStyle(Color.accentColor)
+                                HStack(spacing: 6) {
+                                    Image(systemName: translatorVM.isCopied ? "checkmark" : "doc.on.doc")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .symbolEffect(.bounce, value: translatorVM.translatedText)
+                                        .symbolEffect(.bounce, value: translatorVM.isCopied)
+                                    
+                                    Text(translatorVM.isCopied ? "Copied!" : "Copy")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                }
+                                .foregroundStyle(translatorVM.isCopied ? .green : Color.accentColor)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(.quaternary, lineWidth: 1)
+                                )
                             }
                             .disabled(translatorVM.translatedText.isEmpty)
                             .buttonStyle(.borderless)
+                            .scaleEffect(translatorVM.translatedText.isEmpty ? 0.8 : 1.0)
+                            .opacity(translatorVM.translatedText.isEmpty ? 0.5 : 1.0)
+                            .animation(.smooth(duration: 0.2), value: translatorVM.translatedText.isEmpty)
+                            .animation(.smooth(duration: 0.3), value: translatorVM.isCopied)
                         }
                         
                         ScrollView {
@@ -134,22 +153,74 @@ struct ContentView: View {
                 
                 // Action buttons with enhanced styling
                 HStack(spacing: 16) {
-                    Button("Translate") {
+                    Button(action: {
                         withAnimation(.snappy) {
                             translatorVM.translate()
                         }
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: translatorVM.isTranslating ? "arrow.clockwise" : "arrow.right")
+                                .font(.system(size: 16, weight: .medium))
+                                .symbolEffect(.bounce, value: translatorVM.isTranslating)
+                                .rotationEffect(.degrees(translatorVM.isTranslating ? 360 : 0))
+                                .animation(
+                                    translatorVM.isTranslating ? 
+                                        .linear(duration: 1).repeatForever(autoreverses: false) : 
+                                        .smooth(duration: 0.3),
+                                    value: translatorVM.isTranslating
+                                )
+                            
+                            Text(translatorVM.isTranslating ? "Translating..." : "Translate")
+                                .font(.system(size: 16, weight: .medium))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(
+                            translatorVM.isTranslating ? 
+                                LinearGradient(colors: [.blue.opacity(0.8), .blue], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                                LinearGradient(colors: [Color.accentColor, Color.accentColor.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            in: RoundedRectangle(cornerRadius: 12)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(.white.opacity(0.2), lineWidth: 1)
+                        )
+                        .scaleEffect(translatorVM.inputText.isEmpty || translatorVM.isTranslating ? 0.95 : 1.0)
+                        .opacity(translatorVM.inputText.isEmpty || translatorVM.isTranslating ? 0.7 : 1.0)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+                    .buttonStyle(.borderless)
                     .disabled(translatorVM.inputText.isEmpty || translatorVM.isTranslating)
+                    .animation(.smooth(duration: 0.2), value: translatorVM.inputText.isEmpty)
+                    .animation(.smooth(duration: 0.3), value: translatorVM.isTranslating)
                     
-                    Button("Clear") {
+                    Button(action: {
                         withAnimation(.smooth) {
                             translatorVM.clearText()
                         }
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 16, weight: .medium))
+                                .symbolEffect(.bounce, value: translatorVM.inputText.isEmpty && translatorVM.translatedText.isEmpty)
+                            
+                            Text("Clear")
+                                .font(.system(size: 16, weight: .medium))
+                        }
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(.quaternary, lineWidth: 1)
+                        )
+                        .scaleEffect(translatorVM.inputText.isEmpty && translatorVM.translatedText.isEmpty ? 0.95 : 1.0)
+                        .opacity(translatorVM.inputText.isEmpty && translatorVM.translatedText.isEmpty ? 0.5 : 1.0)
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
+                    .buttonStyle(.borderless)
+                    .disabled(translatorVM.inputText.isEmpty && translatorVM.translatedText.isEmpty)
+                    .animation(.smooth(duration: 0.2), value: translatorVM.inputText.isEmpty && translatorVM.translatedText.isEmpty)
                     
                     if translatorVM.isTranslating {
                         ProgressView()
