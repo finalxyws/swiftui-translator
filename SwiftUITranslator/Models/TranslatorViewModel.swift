@@ -6,6 +6,10 @@ import AppKit
 
 @MainActor
 class TranslatorViewModel: ObservableObject {
+    // Constants
+    static let maxInputLength = 5000
+    static let warningThreshold = 4500
+    
     @Published var inputText: String = ""
     @Published var translatedText: String = ""
     @Published var sourceLanguage: Language = .english

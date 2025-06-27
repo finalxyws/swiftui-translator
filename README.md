@@ -51,27 +51,7 @@ SwiftUITranslator/
     └── TranslationService.swift  # Translation service
 ```
 
-## Installation and Usage
-
-### Quick Start for macOS 15
-
-1. **Clone the project**:
-```bash
-git clone https://github.com/yourusername/swiftui-translator.git
-cd swiftui-translator
-```
-
-2. **Build for macOS 15** (recommended):
-```bash
-./build-macos15.sh
-```
-
-3. **Run the app**:
-```bash
-./run-macos15.sh
-```
-
-### Alternative Installation Methods
+### Installation Methods
 
 #### Using Xcode (macOS 15)
 1. Open `SwiftUITranslator.xcodeproj` in Xcode

@@ -69,15 +69,49 @@ struct ContentView: View {
                                 .fontDesign(.rounded)
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            Text("\(translatorVM.inputText.count)")
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(.quaternary, in: Capsule())
+                            HStack(spacing: 2) {
+                                Text("\(translatorVM.inputText.count)")
+                                    .font(.callout)
+                                    .foregroundStyle(translatorVM.inputText.count > TranslatorViewModel.warningThreshold ? .orange : translatorVM.inputText.count >= TranslatorViewModel.maxInputLength ? .red : .secondary)
+                                Text("/")
+                                    .font(.callout)
+                                    .foregroundStyle(translatorVM.inputText.count > TranslatorViewModel.warningThreshold ? .orange : translatorVM.inputText.count >= TranslatorViewModel.maxInputLength ? .red : .secondary)
+                                    .padding(.horizontal, 2)
+                                Text("\(TranslatorViewModel.maxInputLength)")
+                                    .font(.callout)
+                                    .foregroundStyle(translatorVM.inputText.count > TranslatorViewModel.warningThreshold ? .orange : translatorVM.inputText.count >= TranslatorViewModel.maxInputLength ? .red : .secondary)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(
+                                (translatorVM.inputText.count > TranslatorViewModel.warningThreshold ?
+                                    Color.orange.opacity(0.08) :
+                                    translatorVM.inputText.count >= TranslatorViewModel.maxInputLength ?
+                                        Color.red.opacity(0.08) :
+                                        Color.secondary.opacity(0.07)),
+                                in: Capsule()
+                            )
+                            .overlay(
+                                Capsule()
+                                    .stroke(
+                                        translatorVM.inputText.count > TranslatorViewModel.warningThreshold ?
+                                            Color.orange.opacity(0.3) :
+                                            translatorVM.inputText.count >= TranslatorViewModel.maxInputLength ?
+                                                Color.red.opacity(0.3) :
+                                                Color.clear,
+                                        lineWidth: 1
+                                    )
+                            )
                         }
                         
-                        TextEditor(text: $translatorVM.inputText)
+                        TextEditor(text: Binding(
+                            get: { translatorVM.inputText },
+                            set: { newValue in
+                                if newValue.count <= TranslatorViewModel.maxInputLength {
+                                    translatorVM.inputText = newValue
+                                }
+                            }
+                        ))
                             .font(.system(size: 16, weight: .regular, design: .default))
                             .lineSpacing(6)
                             .padding(16)
@@ -85,7 +119,7 @@ struct ContentView: View {
                             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16)
-                                    .stroke(.quaternary, lineWidth: 1)
+                                    .stroke(.secondary.opacity(0.3), lineWidth: 1)
                             )
                             .frame(height: 200)
                             .contentTransition(.numericText())
@@ -116,12 +150,13 @@ struct ContentView: View {
                                         .fontWeight(.medium)
                                 }
                                 .foregroundStyle(translatorVM.isCopied ? .green : Color.accentColor)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .font(.body)
+                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(.quaternary, lineWidth: 1)
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(.secondary.opacity(0.3), lineWidth: 1)
                                 )
                             }
                             .disabled(translatorVM.translatedText.isEmpty)
@@ -145,7 +180,7 @@ struct ContentView: View {
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                         .overlay(
                             RoundedRectangle(cornerRadius: 16)
-                                .stroke(.quaternary, lineWidth: 1)
+                                .stroke(.secondary.opacity(0.3), lineWidth: 1)
                         )
                         .frame(height: 200)
                     }
